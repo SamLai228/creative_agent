@@ -1,0 +1,43 @@
+{
+  "name": "左對齊版面",
+  "title_position": [
+    100,
+    150
+  ],
+  "title_anchor": "lt",
+  "description_position": [
+    100,
+    250
+  ],
+  "description_anchor": "lt",
+  "description_max_width": 500,
+  "character_position": [
+    700,
+    400
+  ],
+  "character_anchor": "center",
+  "character_size": [
+    400,
+    400
+  ],
+  "decoration_positions": [
+    [
+      50,
+      50
+    ],
+    [
+      1100,
+      50
+    ]
+  ],
+  "decoration_sizes": [
+    [
+      80,
+      80
+    ],
+    [
+      80,
+      80
+    ]
+  ]
+}

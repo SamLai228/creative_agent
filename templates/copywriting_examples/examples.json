@@ -1,0 +1,20 @@
+{
+  "examples": [
+    {
+      "title": "一個人也能活得安心：醫療與老後準備指南",
+      "content": "全台已有超過 600 萬人是單身生活，但你想過嗎？若有一天需要動手術或住院，誰能幫你簽同意書？醫療費從哪來？不只談手術準備，還帶你思考未來的醫療照護與長期保障，讓「一個人生活」也能擁有完整後盾。",
+      "subject": "單身不是問題，沒準備才是問題！",
+      "category": "醫療險",
+      "tone": "關懷",
+      "target_audience": "單身族群",
+      "key_message": "一個人也能活得安心",
+      "call_to_action": [
+        "立即閱讀完整文章",
+        "新iHealth一年期住院醫療健康保險(外溢型)",
+        "點我諮詢"
+      ],
+      "conclusion": "醫療準備做得越早，當那一天真的來臨，你會感謝現在的自己。"
+    }
+  ],
+  "instructions": "請將您的壽險公司文案範例加入此檔案。格式：title（標題）、content（內文）、category（險種分類）、tone（風格）、target_audience（目標受眾）、subject（信件主旨，可選）、key_message（主要訊息，可選）、call_to_action（行動呼籲，可選）、conclusion（結語，可選）"
+}

@@ -1,0 +1,51 @@
+{
+  "name": "網格版面",
+  "title_position": [
+    300,
+    100
+  ],
+  "title_anchor": "lt",
+  "description_position": [
+    300,
+    200
+  ],
+  "description_anchor": "lt",
+  "description_max_width": 400,
+  "character_position": [
+    900,
+    400
+  ],
+  "character_anchor": "center",
+  "character_size": [
+    300,
+    300
+  ],
+  "decoration_positions": [
+    [
+      100,
+      500
+    ],
+    [
+      500,
+      500
+    ],
+    [
+      1100,
+      500
+    ]
+  ],
+  "decoration_sizes": [
+    [
+      150,
+      150
+    ],
+    [
+      150,
+      150
+    ],
+    [
+      150,
+      150
+    ]
+  ]
+}

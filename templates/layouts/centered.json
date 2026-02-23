@@ -1,0 +1,43 @@
+{
+  "name": "置中版面",
+  "title_position": [
+    600,
+    200
+  ],
+  "title_anchor": "center",
+  "description_position": [
+    600,
+    300
+  ],
+  "description_anchor": "center",
+  "description_max_width": 800,
+  "character_position": [
+    600,
+    500
+  ],
+  "character_anchor": "center",
+  "character_size": [
+    300,
+    300
+  ],
+  "decoration_positions": [
+    [
+      200,
+      150
+    ],
+    [
+      1000,
+      150
+    ]
+  ],
+  "decoration_sizes": [
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ]
+}

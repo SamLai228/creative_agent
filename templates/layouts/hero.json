@@ -1,0 +1,26 @@
+{
+  "name": "英雄版面",
+  "title_position": [
+    600,
+    250
+  ],
+  "title_anchor": "center",
+  "title_font_size": 72,
+  "description_position": [
+    600,
+    350
+  ],
+  "description_anchor": "center",
+  "description_max_width": 900,
+  "character_position": [
+    600,
+    550
+  ],
+  "character_anchor": "center",
+  "character_size": [
+    400,
+    400
+  ],
+  "decoration_positions": [],
+  "decoration_sizes": []
+}
