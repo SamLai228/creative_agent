@@ -1,7 +1,7 @@
 # 技術架構圖
 
 ```mermaid
-flowchart TD
+flowchart LR
     Browser["使用者瀏覽器\nhttp://localhost:5173"]
 
     subgraph Frontend["Frontend - React/Vite"]
@@ -11,17 +11,17 @@ flowchart TD
     end
 
     subgraph Backend["FastAPI Backend :8000"]
-        R_Materials["routes/materials.py\n/api/materials/*"]
-        R_Generation["routes/generation.py\n/api/generation/*"]
+        R_Materials["materials.py\n/api/materials/*"]
+        R_Generation["generation.py\n/api/generation/*"]
     end
 
-    subgraph MaterialFactory["Material Factory (src/material_factory/)"]
+    subgraph MaterialFactory["Material Factory"]
         ImageAnalyzer["image_analyzer.py\n圖片轉 base64"]
         LLMTagger["llm_tagger.py\n呼叫 Vision API"]
         TagDatabase["tag_database.py\n讀寫標籤"]
     end
 
-    subgraph Generator["Generator (src/generator/)"]
+    subgraph Generator["Generator"]
         MaterialSelector["material_selector.py\n搜尋素材"]
         TemplateEngine["template_engine.py\nlayout_engine.py"]
         Copywriter["copywriter.py\nLLM 生成文案"]
@@ -30,7 +30,7 @@ flowchart TD
 
     OpenAI["OpenAI Vision API"]
 
-    DB[("data/material_tags.json")]
+    DB[("material_tags.json")]
     Assets[("assets/\n素材圖片")]
     Templates[("templates/\nEDM 範本")]
     Output[("output/\n生成結果")]
