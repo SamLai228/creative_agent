@@ -22,8 +22,10 @@ flowchart LR
     end
 
     subgraph Generator["Generator"]
+        EDMGenerator["edm_generator.py<br/>生成主入口"]
         MaterialSelector["material_selector.py<br/>搜尋素材"]
-        TemplateEngine["template_engine.py<br/>layout_engine.py"]
+        RegionDetector["template_region_detector.py<br/>偵測文字區域"]
+        TemplateEngine["template_engine.py +<br/>layout_engine.py<br/>文字疊加排版"]
         Copywriter["copywriter.py<br/>LLM 生成文案"]
         OutputHandler["output_handler.py"]
     end
@@ -32,7 +34,9 @@ flowchart LR
 
     DB[("material_tags.json")]
     Assets[("assets/<br/>素材圖片")]
-    Templates[("templates/<br/>EDM 範本")]
+    TplImages[("templates/images/<br/>空白範本")]
+    TplRefs[("templates/references/<br/>完稿 reference")]
+    TplConfigs[("templates/configs/<br/>region config JSON")]
     Output[("output/<br/>生成結果")]
 
     Browser -->|"Vite Proxy /api"| Backend
@@ -46,12 +50,18 @@ flowchart LR
     LLMTagger --> TagDatabase
     TagDatabase --> DB
 
+    EDMGenerator --> MaterialSelector
+    EDMGenerator --> RegionDetector
+    EDMGenerator --> Copywriter
+    EDMGenerator --> TemplateEngine
     MaterialSelector --> DB
-    MaterialSelector --> TemplateEngine
-    Templates --> TemplateEngine
-    Assets --> TemplateEngine
-    TemplateEngine --> Copywriter
+    TplRefs --> RegionDetector
+    RegionDetector --> OpenAI
+    RegionDetector --> TplConfigs
+    TplConfigs --> Copywriter
     Copywriter --> OpenAI
-    Copywriter --> OutputHandler
+    TplImages --> TemplateEngine
+    Assets --> TemplateEngine
+    TemplateEngine --> OutputHandler
     OutputHandler --> Output
 ```
