@@ -48,6 +48,7 @@ temp/
 tmp/
 output/
 .edm_cache/
+templates/references/
 
 # Frontend
 frontend/node_modules/
