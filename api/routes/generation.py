@@ -216,6 +216,114 @@ async def detect_template_regions(template_name: str = Query(..., description="T
         )
 
 
+@router.post("/generate-copy-for-template")
+async def generate_copy_for_template(request: Dict):
+    """
+    根據 template 的 region 配置生成文案，每個 region 各自有精確字數上限。
+
+    Args:
+        request: 包含以下欄位：
+            - template_name: Template 檔名（例：edm_template_01.jpeg），必填
+            - product_name: 產品/服務名稱
+            - promotion_type: 促銷類型
+            - key_message: 主要訊息
+            - target_audience: 目標受眾
+            - tone: 文案風格
+
+    Returns:
+        dict: { region_id: text } — 每個 region 對應一段獨立文案
+    """
+    template_name = request.get("template_name")
+    if not template_name:
+        raise HTTPException(status_code=422, detail="缺少必填欄位：template_name")
+
+    try:
+        from src.generator.template_engine import TemplateEngine
+        from src.generator.copywriter import Copywriter
+
+        # 載入 template region 配置（若不存在會拋 404）
+        engine = TemplateEngine()
+        config = engine.load_template_config(template_name, auto_detect=False)
+        if not config:
+            raise HTTPException(
+                status_code=404,
+                detail=f"找不到 template 配置：{template_name}。請先呼叫 /detect-template-regions 或 /detect-regions-from-reference。",
+            )
+
+        requirements = {k: v for k, v in request.items() if k != "template_name"}
+
+        copywriter = Copywriter()
+        copy_map = copywriter.generate_copy_for_template(config, requirements)
+
+        return {
+            "template_name": config.get("template_name"),
+            "regions_count": len(copy_map),
+            "copy": copy_map,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Template 文案生成失敗: {str(e)}")
+
+
+@router.post("/detect-regions-from-reference")
+async def detect_regions_from_reference(
+    template_name: str = Query(..., description="空白 template 檔名（例：edm_template_01.jpeg）"),
+    reference_name: str = Query(..., description="含文字的完稿 EDM 檔名（例：edm_full_01.png）"),
+):
+    """
+    從含文字的完稿 EDM 提取文字區域，換算到空白 template 座標系後保存配置
+
+    比直接分析空白 template 更精準，因為可以看到真實的文字位置。
+
+    Args:
+        template_name: 空白 template 檔名
+        reference_name: 含文字完稿 EDM 檔名（放在 templates/references/ 目錄下）
+
+    Returns:
+        識別結果配置（同 /detect-template-regions）
+    """
+    try:
+        from src.generator.template_region_detector import TemplateRegionDetector
+        from src.generator.template_engine import TemplateEngine
+        from src.config import TEMPLATE_IMAGES_DIR
+
+        # 建立 reference 路徑（放在 templates/references/）
+        references_dir = TEMPLATE_IMAGES_DIR.parent / "references"
+        reference_path = str(references_dir / reference_name)
+        template_path = str(TEMPLATE_IMAGES_DIR / template_name)
+
+        detector = TemplateRegionDetector()
+        config = detector.detect_regions_from_reference(
+            reference_path=reference_path,
+            template_path=template_path,
+        )
+
+        # 保存配置（複用 TemplateEngine 的儲存邏輯）
+        import json
+        from pathlib import Path
+        from src.config import TEMPLATE_CONFIGS_DIR
+
+        template_stem = Path(template_name).stem
+        config_file = TEMPLATE_CONFIGS_DIR / f"{template_stem}.json"
+        with open(config_file, "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+
+        return {
+            "template_name": config.get("template_name"),
+            "template_image": config.get("template_image"),
+            "canvas_size": config.get("canvas_size"),
+            "regions_count": len(config.get("regions", [])),
+            "regions": config.get("regions", []),
+            "message": f"從 reference 識別完成，共識別 {len(config.get('regions', []))} 個區域，已保存至 {config_file.name}",
+        }
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"從 reference 識別區域失敗: {str(e)}")
+
+
 @router.get("/template-regions")
 async def get_template_regions(template_name: str = Query(..., description="Template 檔名")):
     """

@@ -232,7 +232,14 @@ class Copywriter:
                 rid = slot["id"]
                 text = str(raw.get(rid, "")).strip()
                 if len(text) > slot["max_chars"]:
-                    text = text[: slot["max_chars"]]
+                    cutoff = slot["max_chars"]
+                    # 優先在標點符號處斷句，至少保留 70% 字數
+                    for punct in "。！？，、":
+                        idx = text.rfind(punct, 0, cutoff)
+                        if idx >= int(cutoff * 0.7):
+                            cutoff = idx + 1  # 保留標點
+                            break
+                    text = text[:cutoff]
                 result[rid] = text
 
             return result
@@ -259,15 +266,17 @@ class Copywriter:
             "title": "標題（簡潔有力）",
             "content": "內文說明",
             "cta": "行動呼籲按鈕（短促有力）",
-            "conclusion": "結語",
+            "conclusion": "結語（完整一句話，必須盡量用滿字數上限）",
         }
 
         slot_lines = []
         for s in slots:
             label = type_labels.get(s["type"], s["type"])
+            min_chars = max(1, int(s["max_chars"] * 0.8))
             slot_lines.append(
-                f'  "{s["id"]}": {label}，最多 {s["max_chars"]} 字'
-                f'（每行 {s["chars_per_line"]} 字 × {s["max_lines"]} 行）'
+                f'  "{s["id"]}": {label}'
+                f'，目標 {s["max_chars"]} 字（不可少於 {min_chars} 字，不可超過 {s["max_chars"]} 字）'
+                f'，每行約 {s["chars_per_line"]} 字，共 {s["max_lines"]} 行'
             )
 
         # 空殼 JSON 給 LLM 知道要填哪些 key
@@ -286,12 +295,12 @@ class Copywriter:
 ## 重要規則
 1. 每個欄位的文字**獨立完整**，不可在下一欄延續句子
 2. **嚴格不超過**各欄位的字數上限（超過會被截斷）
-3. **盡量填滿字數上限**，讓版面飽滿，不要只寫 2-3 字了事
+3. **字數必須達到目標的 80% 以上**，版面有多少空間就要填多少文字
 4. 文案邏輯順序：標題 → 介紹說明 → 特色亮點 → 行動呼籲 → 結語
-5. title 類型：精煉的標題或副標題，盡量用到上限字數
-6. content 類型：依 EDM 版面位置填入對應段落內容，每行要有完整意義
+5. title 類型：精煉的標題或副標題，必須用到目標字數的 80% 以上
+6. content 類型：依 EDM 版面位置填入完整段落內容，每行要有完整意義，填滿為止
 7. cta 類型：簡短、有行動力的按鈕文字（例：「立即了解方案」「點我免費諮詢」）
-8. conclusion 類型：溫暖收尾的結語，盡量填滿
+8. conclusion 類型：溫暖且完整的結語，**必須達到目標字數的 80% 以上**。若目標 10 字，寫「期待與您攜手，共創安心生活」（12字但被截到10字），而非「與您守家」（4字）
 
 ## 請填入以下 JSON（不可增減欄位）
 {skeleton}"""

@@ -412,7 +412,7 @@ class LayoutEngine:
                         line_count += 1  # 最後一行
                         n_lines = max(1, line_count)
 
-                    total_text_h = n_lines * (font_size + 10)
+                    total_text_h = (n_lines - 1) * (font_size + 10) + font_size
                     text_bbox = _draw.textbbox((0, 0), text, font=_font)
                     text_w = text_bbox[2] - text_bbox[0]
                     if max_width:
