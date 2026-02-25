@@ -175,7 +175,8 @@ class LayoutEngine:
         font_size: int = 48,
         color: Tuple[int, int, int] = (0, 0, 0),
         font_path: Optional[str] = None,
-        max_width: Optional[int] = None
+        max_width: Optional[int] = None,
+        bold: bool = False
     ) -> Image.Image:
         """
         放置文字
@@ -200,8 +201,17 @@ class LayoutEngine:
                 if font_path and Path(font_path).exists():
                     font = ImageFont.truetype(font_path, font_size)
                 elif self.chinese_font_path:
-                    # 使用找到的中文字體
-                    font = ImageFont.truetype(self.chinese_font_path, font_size)
+                    # 使用找到的中文字體；bold=True 嘗試 Semibold (index=4) 再 Medium (index=1)
+                    if bold:
+                        try:
+                            font = ImageFont.truetype(self.chinese_font_path, font_size, index=4)
+                        except Exception:
+                            try:
+                                font = ImageFont.truetype(self.chinese_font_path, font_size, index=1)
+                            except Exception:
+                                font = ImageFont.truetype(self.chinese_font_path, font_size)
+                    else:
+                        font = ImageFont.truetype(self.chinese_font_path, font_size)
                 else:
                     # 嘗試使用系統預設中文字體
                     try:
@@ -370,6 +380,7 @@ class LayoutEngine:
             x, y, width, height = bbox
             anchor = region.get("anchor", "lt")
             font_size = region.get("font_size", 32)
+            bold = region.get("bold", False)
             color = tuple(region.get("color", [0, 0, 0]))
             max_width = region.get("max_width", width)
             
@@ -438,7 +449,8 @@ class LayoutEngine:
                 (text_x, text_y),
                 font_size=font_size,
                 color=color,
-                max_width=max_width
+                max_width=max_width,
+                bold=bold
             )
             
         except Exception as e:

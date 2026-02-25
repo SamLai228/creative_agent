@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-from src.config import ASSETS_DIR
+from src.config import ASSETS_DIR, TEMPLATE_IMAGES_DIR, OUTPUT_DIR
 from api.routes import materials, generation
 
 app = FastAPI(
@@ -29,6 +29,14 @@ app.include_router(generation.router)
 assets_path = Path(ASSETS_DIR)
 if assets_path.exists():
     app.mount("/assets", StaticFiles(directory=str(assets_path)), name="assets")
+
+template_images_path = Path(TEMPLATE_IMAGES_DIR)
+if template_images_path.exists():
+    app.mount("/templates", StaticFiles(directory=str(template_images_path)), name="templates")
+
+output_path = Path(OUTPUT_DIR)
+output_path.mkdir(exist_ok=True)
+app.mount("/output", StaticFiles(directory=str(output_path)), name="output")
 
 
 @app.get("/")

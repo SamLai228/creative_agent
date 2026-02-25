@@ -8,6 +8,8 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:8000',
       '/assets': 'http://localhost:8000',
+      '/templates': 'http://localhost:8000',
+      '/output': 'http://localhost:8000',
     },
   },
 })

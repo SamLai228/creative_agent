@@ -121,3 +121,44 @@ export const deleteMaterial = async (filePath) => {
   const response = await api.delete(`/api/materials/${encodeURIComponent(filePath)}`);
   return response.data;
 };
+
+/**
+ * 取得所有可用的 EDM template 列表
+ * @returns {Promise<Array<{name, stem, url}>>}
+ */
+export const getTemplates = async () => {
+  const response = await api.get('/api/generation/templates');
+  return response.data;
+};
+
+/**
+ * 取得 template 的 region 配置
+ * @param {string} templateName - Template 檔名
+ * @returns {Promise} region 配置
+ */
+export const getTemplateRegions = async (templateName) => {
+  const response = await api.get('/api/generation/template-regions', {
+    params: { template_name: templateName },
+  });
+  return response.data;
+};
+
+/**
+ * 根據 template region 配置生成文案
+ * @param {Object} payload - { template_name, product_name, ... }
+ * @returns {Promise<{copy: {[region_id]: string}}>}
+ */
+export const generateCopyForTemplate = async (payload) => {
+  const response = await api.post('/api/generation/generate-copy-for-template', payload);
+  return response.data;
+};
+
+/**
+ * 將文字疊加到 template 並匯出 PNG
+ * @param {Object} payload - { template_name, regions: [...] }
+ * @returns {Promise<{url: string}>}
+ */
+export const renderWithCopy = async (payload) => {
+  const response = await api.post('/api/generation/render-with-copy', payload);
+  return response.data;
+};

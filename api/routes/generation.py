@@ -1,7 +1,10 @@
 """EDM 生成相關 API 路由"""
+import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Dict
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 from src.generator import EDMGenerator
 from api.models import (
     GenerationRequest,
@@ -361,3 +364,98 @@ async def get_template_regions(template_name: str = Query(..., description="Temp
             status_code=500,
             detail=f"取得 template 配置失敗: {str(e)}"
         )
+
+
+@router.get("/templates")
+async def list_templates():
+    """
+    列出所有可用的 EDM template 圖片
+
+    Returns:
+        [{name, stem, url}] — template 檔名、stem 和靜態圖片 URL
+    """
+    from src.config import TEMPLATE_IMAGES_DIR
+    image_extensions = {".jpeg", ".jpg", ".png", ".webp"}
+    templates = []
+    for f in sorted(TEMPLATE_IMAGES_DIR.iterdir()):
+        if f.suffix.lower() in image_extensions:
+            templates.append({
+                "name": f.name,
+                "stem": f.stem,
+                "url": f"/templates/{f.name}",
+            })
+    return templates
+
+
+class RenderRegion(BaseModel):
+    id: str
+    text: str
+    x: float
+    y: float
+    width: float
+    height: float
+    font_size: int = 32
+    bold: bool = False
+    color: List[int] = [255, 255, 255]
+    anchor: str = "lt"
+    max_width: Optional[float] = None
+
+
+class RenderRequest(BaseModel):
+    template_name: str
+    regions: List[RenderRegion]
+
+
+@router.post("/render-with-copy")
+async def render_with_copy(request: RenderRequest):
+    """
+    將文字疊加到 template 上並匯出 PNG
+
+    Args:
+        request.template_name: Template 檔名
+        request.regions: 每個文字區域的位置、內容、樣式
+
+    Returns:
+        {url: "/output/edm/{filename}.png"}
+    """
+    from PIL import Image
+    from src.generator.layout_engine import LayoutEngine
+    from src.config import TEMPLATE_IMAGES_DIR, OUTPUT_DIR
+
+    template_path = TEMPLATE_IMAGES_DIR / request.template_name
+    if not template_path.exists():
+        raise HTTPException(status_code=404, detail=f"Template 不存在: {request.template_name}")
+
+    try:
+        engine = LayoutEngine()
+        canvas = engine.create_canvas(template_path=str(template_path))
+
+        for region in request.regions:
+            region_dict = {
+                "bbox": [region.x, region.y, region.width, region.height],
+                "anchor": region.anchor,
+                "font_size": region.font_size,
+                "bold": region.bold,
+                "color": region.color,
+                "max_width": region.max_width if region.max_width is not None else region.width,
+            }
+            canvas = engine.place_text_in_region(canvas, region.text, region_dict)
+
+        # 儲存到 output/edm/
+        edm_dir = OUTPUT_DIR / "edm"
+        edm_dir.mkdir(parents=True, exist_ok=True)
+
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        uid = str(uuid.uuid4())[:8]
+        stem = Path(request.template_name).stem
+        filename = f"{stem}_{ts}_{uid}.png"
+        out_path = edm_dir / filename
+
+        canvas.save(str(out_path), "PNG")
+
+        return {"url": f"/output/edm/{filename}"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"渲染失敗: {str(e)}")

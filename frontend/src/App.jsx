@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import MaterialUpload from './components/MaterialUpload';
 import MaterialList from './components/MaterialList';
+import EDMGenerator from './components/EDMGenerator/EDMGenerator';
 import './App.css';
 
 function App() {
@@ -33,6 +34,12 @@ function App() {
         >
           素材列表
         </button>
+        <button
+          className={activeTab === 'generate' ? 'active' : ''}
+          onClick={() => setActiveTab('generate')}
+        >
+          EDM 生成
+        </button>
       </nav>
 
       <main className="app-main">
@@ -41,6 +48,9 @@ function App() {
         )}
         {activeTab === 'list' && (
           <MaterialList key={refreshKey} />
+        )}
+        {activeTab === 'generate' && (
+          <EDMGenerator />
         )}
       </main>
 
