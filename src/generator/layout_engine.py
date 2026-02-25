@@ -216,32 +216,35 @@ class LayoutEngine:
                 print(f"警告: 無法載入字體，使用預設字體: {str(e)}")
                 font = ImageFont.load_default()
             
-            # 如果需要自動換行（支援中文）
+            # 如果需要自動換行（支援中文與顯式 \n）
             if max_width:
                 lines = []
-                # 中文不需要用空格分詞，直接按字符處理
                 current_line = ""
-                
+
                 for char in text:
+                    # 遇到顯式換行符，強制斷行
+                    if char == "\n":
+                        lines.append(current_line)
+                        current_line = ""
+                        continue
+
                     test_line = current_line + char
                     try:
                         bbox = draw.textbbox((0, 0), test_line, font=font)
                         text_width = bbox[2] - bbox[0]
                     except:
-                        # 如果 textbbox 失敗，使用 textlength（Pillow 10+）
                         try:
                             text_width = draw.textlength(test_line, font=font)
                         except:
-                            # 如果都失敗，使用估算（中文字約為字體大小的寬度）
                             text_width = len(test_line) * (font_size // 2)
-                    
+
                     if text_width <= max_width:
                         current_line = test_line
                     else:
                         if current_line:
                             lines.append(current_line)
                         current_line = char
-                
+
                 if current_line:
                     lines.append(current_line)
                 
@@ -372,9 +375,53 @@ class LayoutEngine:
             
             # 計算文字位置（根據 anchor）
             if anchor == "center":
-                # 居中對齊：從區域中心開始
-                text_x = x + width // 2
-                text_y = y + height // 2
+                # 居中對齊：先計算換行後的實際行數，用於正確垂直置中
+                center_x = x + width // 2
+                center_y = y + height // 2
+                try:
+                    _draw = ImageDraw.Draw(canvas)
+                    try:
+                        if self.chinese_font_path:
+                            _font = ImageFont.truetype(self.chinese_font_path, font_size)
+                        else:
+                            _font = ImageFont.load_default()
+                    except Exception:
+                        _font = ImageFont.load_default()
+
+                    # 計算換行後的實際行數（與 place_text 的換行邏輯一致）
+                    n_lines = 1
+                    if max_width:
+                        current_line = ""
+                        line_count = 0
+                        for char in text:
+                            if char == "\n":
+                                line_count += 1
+                                current_line = ""
+                                continue
+                            test_line = current_line + char
+                            try:
+                                tb = _draw.textbbox((0, 0), test_line, font=_font)
+                                tw = tb[2] - tb[0]
+                            except Exception:
+                                tw = len(test_line) * (font_size // 2)
+                            if tw <= max_width:
+                                current_line = test_line
+                            else:
+                                line_count += 1
+                                current_line = char
+                        line_count += 1  # 最後一行
+                        n_lines = max(1, line_count)
+
+                    total_text_h = n_lines * (font_size + 10)
+                    text_bbox = _draw.textbbox((0, 0), text, font=_font)
+                    text_w = text_bbox[2] - text_bbox[0]
+                    if max_width:
+                        text_w = min(text_w, max_width)
+                    text_x = center_x - text_w // 2
+                    text_y = center_y - total_text_h // 2
+                except Exception:
+                    text_x = center_x
+                    text_y = center_y
             elif anchor == "rt":
                 # 右對齊：從區域右側開始
                 text_x = x + width
@@ -383,7 +430,7 @@ class LayoutEngine:
                 # 左對齊（預設）
                 text_x = x
                 text_y = y
-            
+
             # 使用現有的 place_text 方法
             return self.place_text(
                 canvas,

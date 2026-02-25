@@ -171,6 +171,131 @@ class Copywriter:
         
         return prompt
     
+    def generate_copy_for_template(
+        self,
+        template_config: Dict,
+        requirements: Dict,
+    ) -> Dict[str, str]:
+        """
+        根據 template 的 region 配置生成文案，每個 region 各自有字數上限。
+
+        Args:
+            template_config: 由 TemplateRegionDetector 產生的 region config
+            requirements: 生成需求（product_name、key_message、target_audience、tone 等）
+
+        Returns:
+            dict: region_id → 對應文字（已截斷至字數上限）
+        """
+        regions = template_config.get("regions", [])
+
+        # 計算每個 region 的字數上限
+        slots = []
+        for r in regions:
+            bbox = r.get("bbox", [0, 0, 100, 100])
+            fs = r.get("font_size", 26)
+            cpl = max(1, int(bbox[2] / fs))               # chars per line (PingFang CJK ≈ 0.95× fs)
+            lines = max(1, int(bbox[3] / (fs + 10)))      # max lines
+            slots.append({
+                "id": r["id"],
+                "type": r["type"],
+                "max_chars": cpl * lines,
+                "chars_per_line": cpl,
+                "max_lines": lines,
+            })
+
+        prompt = self._build_template_copy_prompt(slots, requirements)
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "你是一個專業的壽險 EDM 文案撰寫師。"
+                            "請嚴格遵守每個欄位的字數上限，不可超過。"
+                            "每個欄位的文字必須獨立完整，不能延續到下一欄。"
+                            "使用繁體中文，語氣溫暖專業。"
+                        ),
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.7,
+            )
+
+            raw = json.loads(response.choices[0].message.content)
+
+            # 截斷超出字數的文字，清除空白
+            result: Dict[str, str] = {}
+            for slot in slots:
+                rid = slot["id"]
+                text = str(raw.get(rid, "")).strip()
+                if len(text) > slot["max_chars"]:
+                    text = text[: slot["max_chars"]]
+                result[rid] = text
+
+            return result
+
+        except Exception as e:
+            raise RuntimeError(f"Template 文案生成失敗: {str(e)}")
+
+    def _build_template_copy_prompt(self, slots: List[Dict], requirements: Dict) -> str:
+        """建立 template-aware 文案提示詞"""
+        req_parts = []
+        if requirements.get("product_name"):
+            req_parts.append(f"產品名稱：{requirements['product_name']}")
+        if requirements.get("promotion_type"):
+            req_parts.append(f"促銷類型：{requirements['promotion_type']}")
+        if requirements.get("key_message"):
+            req_parts.append(f"主要訊息：{requirements['key_message']}")
+        if requirements.get("target_audience"):
+            req_parts.append(f"目標受眾：{requirements['target_audience']}")
+        if requirements.get("tone"):
+            req_parts.append(f"文案風格：{requirements['tone']}")
+        req_text = "\n".join(req_parts) if req_parts else "壽險保障推廣"
+
+        type_labels = {
+            "title": "標題（簡潔有力）",
+            "content": "內文說明",
+            "cta": "行動呼籲按鈕（短促有力）",
+            "conclusion": "結語",
+        }
+
+        slot_lines = []
+        for s in slots:
+            label = type_labels.get(s["type"], s["type"])
+            slot_lines.append(
+                f'  "{s["id"]}": {label}，最多 {s["max_chars"]} 字'
+                f'（每行 {s["chars_per_line"]} 字 × {s["max_lines"]} 行）'
+            )
+
+        # 空殼 JSON 給 LLM 知道要填哪些 key
+        skeleton = json.dumps(
+            {s["id"]: "" for s in slots}, ensure_ascii=False, indent=2
+        )
+
+        return f"""請為壽險公司 EDM 生成完整的多段文案，每個欄位對應版面中的一個文字區域。
+
+## 需求資訊
+{req_text}
+
+## 欄位說明（嚴格遵守字數上限）
+{chr(10).join(slot_lines)}
+
+## 重要規則
+1. 每個欄位的文字**獨立完整**，不可在下一欄延續句子
+2. **嚴格不超過**各欄位的字數上限（超過會被截斷）
+3. **盡量填滿字數上限**，讓版面飽滿，不要只寫 2-3 字了事
+4. 文案邏輯順序：標題 → 介紹說明 → 特色亮點 → 行動呼籲 → 結語
+5. title 類型：精煉的標題或副標題，盡量用到上限字數
+6. content 類型：依 EDM 版面位置填入對應段落內容，每行要有完整意義
+7. cta 類型：簡短、有行動力的按鈕文字（例：「立即了解方案」「點我免費諮詢」）
+8. conclusion 類型：溫暖收尾的結語，盡量填滿
+
+## 請填入以下 JSON（不可增減欄位）
+{skeleton}"""
+
     def _validate_and_normalize_copy(self, copy: Dict) -> Dict:
         """驗證和標準化文案"""
         # 處理 CTA
