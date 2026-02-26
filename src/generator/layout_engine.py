@@ -176,11 +176,15 @@ class LayoutEngine:
         color: Tuple[int, int, int] = (0, 0, 0),
         font_path: Optional[str] = None,
         max_width: Optional[int] = None,
-        bold: bool = False
+        bold: bool = False,
+        stroke_width: int = 0,
+        stroke_color: Tuple[int, int, int] = (0, 0, 0),
+        shadow_offset: int = 0,
+        shadow_color: Tuple[int, int, int] = (0, 0, 0),
     ) -> Image.Image:
         """
         放置文字
-        
+
         Args:
             canvas: 畫布
             text: 文字內容
@@ -189,7 +193,11 @@ class LayoutEngine:
             color: 文字顏色 RGB
             font_path: 字體路徑（可選）
             max_width: 最大寬度（自動換行）
-            
+            stroke_width: 描邊寬度（0 = 不描邊）
+            stroke_color: 描邊顏色 RGB
+            shadow_offset: 陰影位移像素（0 = 不加陰影）
+            shadow_color: 陰影顏色 RGB
+
         Returns:
             更新後的畫布
         """
@@ -262,10 +270,30 @@ class LayoutEngine:
                 y_offset = 0
                 line_height = font_size + 10
                 for line in lines:
-                    draw.text((position[0], position[1] + y_offset), line, fill=color, font=font)
+                    lx = position[0]
+                    ly = position[1] + y_offset
+                    if shadow_offset > 0:
+                        draw.text(
+                            (lx + shadow_offset, ly + shadow_offset),
+                            line, fill=shadow_color, font=font,
+                        )
+                    draw.text(
+                        (lx, ly), line, fill=color, font=font,
+                        stroke_width=stroke_width,
+                        stroke_fill=stroke_color if stroke_width > 0 else None,
+                    )
                     y_offset += line_height
             else:
-                draw.text(position, text, fill=color, font=font)
+                if shadow_offset > 0:
+                    draw.text(
+                        (position[0] + shadow_offset, position[1] + shadow_offset),
+                        text, fill=shadow_color, font=font,
+                    )
+                draw.text(
+                    position, text, fill=color, font=font,
+                    stroke_width=stroke_width,
+                    stroke_fill=stroke_color if stroke_width > 0 else None,
+                )
             
             return canvas
         except Exception as e:
@@ -383,6 +411,10 @@ class LayoutEngine:
             bold = region.get("bold", False)
             color = tuple(region.get("color", [0, 0, 0]))
             max_width = region.get("max_width", width)
+            stroke_width = int(region.get("stroke_width", 0))
+            stroke_color = tuple(region.get("stroke_color", [0, 0, 0]))
+            shadow_offset = int(region.get("shadow_offset", 0))
+            shadow_color = tuple(region.get("shadow_color", [0, 0, 0]))
             
             # 計算文字位置（根據 anchor）
             if anchor == "center":
@@ -450,7 +482,11 @@ class LayoutEngine:
                 font_size=font_size,
                 color=color,
                 max_width=max_width,
-                bold=bold
+                bold=bold,
+                stroke_width=stroke_width,
+                stroke_color=stroke_color,
+                shadow_offset=shadow_offset,
+                shadow_color=shadow_color,
             )
             
         except Exception as e:

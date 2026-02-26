@@ -499,14 +499,25 @@ class TemplateRegionDetector:
 - **suggested_color**: 文字顏色 [R, G, B]
 - **alignment**: left / center / right
 - **max_width**: 等於 width
+- **bold**: 文字是否為粗體（true/false）。字體筆劃明顯較粗即為粗體
+- **stroke_width**: 描邊寬度（像素整數）。若文字有明顯白邊/黑邊/彩色邊框請填入估計寬度（1–8），沒有描邊則填 0
+- **stroke_color**: 描邊顏色 [R, G, B]。若 stroke_width=0 則填 [0, 0, 0]
+- **shadow_offset**: 陰影位移距離（像素整數）。若文字有明顯投影/陰影請填入估計距離（1–10），沒有陰影則填 0
+- **shadow_color**: 陰影顏色 [R, G, B]。若 shadow_offset=0 則填 [0, 0, 0]
 
-## 正確範例（3 行內文 → 3 個 region）
+## 描邊與陰影判斷指引
+- **描邊（stroke）**：文字邊緣有一圈明顯不同顏色的輪廓線（如黑字白邊、白字黑邊）
+- **陰影（shadow）**：文字右下方或特定方向有半透明或深色的偏移複製
+- 如果文字只是放在有顏色的背景上（按鈕、色塊），不算描邊/陰影，填 0
+- 如果看不清楚，寧可填 0，不要猜測
+
+## 正確範例（3 行內文 → 3 個 region，其中一行有描邊）
 如果圖中有連續 3 行內文，字體大小約 26px，行距約 10px：
 {{
   "regions": [
-    {{"type": "content", "text": "第一行文字內容", "bbox": [80, 200, 400, 34], "font_size": 26, "suggested_color": [60, 60, 60], "alignment": "left", "max_width": 400}},
-    {{"type": "content", "text": "第二行文字內容", "bbox": [80, 244, 420, 34], "font_size": 26, "suggested_color": [60, 60, 60], "alignment": "left", "max_width": 420}},
-    {{"type": "content", "text": "第三行文字內容", "bbox": [80, 288, 380, 34], "font_size": 26, "suggested_color": [60, 60, 60], "alignment": "left", "max_width": 380}}
+    {{"type": "title", "text": "主標題有白邊粗體", "bbox": [80, 100, 400, 40], "font_size": 32, "suggested_color": [20, 20, 20], "alignment": "left", "max_width": 400, "bold": true, "stroke_width": 3, "stroke_color": [255, 255, 255], "shadow_offset": 0, "shadow_color": [0, 0, 0]}},
+    {{"type": "content", "text": "第一行文字內容", "bbox": [80, 200, 400, 34], "font_size": 26, "suggested_color": [60, 60, 60], "alignment": "left", "max_width": 400, "stroke_width": 0, "stroke_color": [0, 0, 0], "shadow_offset": 0, "shadow_color": [0, 0, 0]}},
+    {{"type": "content", "text": "第二行有陰影", "bbox": [80, 244, 420, 34], "font_size": 26, "suggested_color": [255, 255, 255], "alignment": "left", "max_width": 420, "stroke_width": 0, "stroke_color": [0, 0, 0], "shadow_offset": 2, "shadow_color": [0, 0, 0]}}
   ]
 }}
 
@@ -573,17 +584,30 @@ class TemplateRegionDetector:
                 "bbox": [x, y, width, height],
                 "anchor": "lt",  # 預設左上角對齊
                 "font_size": int(region.get("suggested_font_size", 32)),
+                "bold": bool(region.get("bold", False)),
                 "color": region.get("suggested_color", [0, 0, 0]),
                 "max_width": int(region.get("max_width", width)),
             }
-            
+
+            # 描邊
+            stroke_width = int(region.get("stroke_width", 0))
+            if stroke_width > 0:
+                normalized_region["stroke_width"] = stroke_width
+                normalized_region["stroke_color"] = region.get("stroke_color", [0, 0, 0])
+
+            # 陰影
+            shadow_offset = int(region.get("shadow_offset", 0))
+            if shadow_offset > 0:
+                normalized_region["shadow_offset"] = shadow_offset
+                normalized_region["shadow_color"] = region.get("shadow_color", [0, 0, 0])
+
             # 根據對齊方式設定 anchor
             alignment = region.get("alignment", "left")
             if alignment == "center":
                 normalized_region["anchor"] = "center"
             elif alignment == "right":
                 normalized_region["anchor"] = "rt"
-            
+
             normalized_regions.append(normalized_region)
         
         # 構建最終結果

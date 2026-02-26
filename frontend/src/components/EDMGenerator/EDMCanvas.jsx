@@ -53,11 +53,25 @@ function EDMCanvas({ templateName, regions, onRegionsChange, onExport, onBack })
     [onRegionsChange]
   );
 
-  const handleExport = async () => {
-    setExporting(true);
+  const handleExport = async (format = 'png') => {
+    setExporting(format);
     try {
-      const result = await renderWithCopy({ template_name: templateName, regions });
-      onExport(result.url);
+      const result = await renderWithCopy({
+        template_name: templateName,
+        regions,
+        export_format: format,
+      });
+      if (format === 'html') {
+        // 強制下載 HTML 檔案
+        const a = document.createElement('a');
+        a.href = result.url;
+        a.download = result.filename || 'edm.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        onExport(result.url);
+      }
     } catch (err) {
       const detail = err.response?.data?.detail || err.message || '匯出失敗';
       alert('匯出失敗：' + detail);
@@ -87,15 +101,22 @@ function EDMCanvas({ templateName, regions, onRegionsChange, onExport, onBack })
           <button className="zoom-btn zoom-fit-btn" onClick={zoomFit} title="自動縮放">Fit</button>
         </div>
 
-        <button onClick={handleExport} disabled={exporting} className="topbar-btn export-btn">
-          {exporting ? (
-            <>
-              <span className="spinner-sm" /> 渲染中...
-            </>
-          ) : (
-            '匯出 PNG'
-          )}
-        </button>
+        <div className="export-group">
+          <button
+            onClick={() => handleExport('png')}
+            disabled={!!exporting}
+            className="topbar-btn export-btn"
+          >
+            {exporting === 'png' ? <><span className="spinner-sm" /> 渲染中...</> : '匯出 PNG'}
+          </button>
+          <button
+            onClick={() => handleExport('html')}
+            disabled={!!exporting}
+            className="topbar-btn export-btn export-btn-html"
+          >
+            {exporting === 'html' ? <><span className="spinner-sm" /> 產生中...</> : '匯出 HTML'}
+          </button>
+        </div>
       </div>
 
       {/* Canvas area */}

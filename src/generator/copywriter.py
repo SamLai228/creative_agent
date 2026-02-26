@@ -195,12 +195,16 @@ class Copywriter:
             fs = r.get("font_size", 26)
             cpl = max(1, int(bbox[2] / fs))               # chars per line (PingFang CJK ≈ 0.95× fs)
             lines = max(1, int(bbox[3] / (fs + 10)))      # max lines
+            is_cta = r.get("type") == "cta"
+            # CTA target: 優先用 ref_text_len（reference 實際字數），否則退回一行填滿估算
+            cta_target = r.get("ref_text_len") or (cpl if is_cta else None)
             slots.append({
                 "id": r["id"],
                 "type": r["type"],
                 "max_chars": cpl * lines,
                 "chars_per_line": cpl,
                 "max_lines": lines,
+                "target_chars": cta_target,
             })
 
         prompt = self._build_template_copy_prompt(slots, requirements)
@@ -231,7 +235,12 @@ class Copywriter:
             for slot in slots:
                 rid = slot["id"]
                 text = str(raw.get(rid, "")).strip()
-                if len(text) > slot["max_chars"]:
+                if slot["target_chars"] is not None:
+                    # CTA：只截斷，不補字（若 LLM 給太短，接受現狀，prompt 已強調字數要求）
+                    tc = slot["target_chars"]
+                    if len(text) > tc + 1:
+                        text = text[:tc + 1]
+                elif len(text) > slot["max_chars"]:
                     cutoff = slot["max_chars"]
                     # 優先在標點符號處斷句，至少保留 70% 字數
                     for punct in "。！？，、":
@@ -272,12 +281,20 @@ class Copywriter:
         slot_lines = []
         for s in slots:
             label = type_labels.get(s["type"], s["type"])
-            min_chars = max(1, int(s["max_chars"] * 0.8))
-            slot_lines.append(
-                f'  "{s["id"]}": {label}'
-                f'，目標 {s["max_chars"]} 字（不可少於 {min_chars} 字，不可超過 {s["max_chars"]} 字）'
-                f'，每行約 {s["chars_per_line"]} 字，共 {s["max_lines"]} 行'
-            )
+            if s["target_chars"] is not None:
+                # CTA：緊約束，必須接近一行填滿
+                tc = s["target_chars"]
+                slot_lines.append(
+                    f'  "{s["id"]}": {label}'
+                    f'，**必須恰好 {tc-1}～{tc+1} 字**（按鈕寬度固定，字數偏少會留空白）'
+                )
+            else:
+                min_chars = max(1, int(s["max_chars"] * 0.8))
+                slot_lines.append(
+                    f'  "{s["id"]}": {label}'
+                    f'，目標 {s["max_chars"]} 字（不可少於 {min_chars} 字，不可超過 {s["max_chars"]} 字）'
+                    f'，每行約 {s["chars_per_line"]} 字，共 {s["max_lines"]} 行'
+                )
 
         # 空殼 JSON 給 LLM 知道要填哪些 key
         skeleton = json.dumps(
@@ -299,7 +316,7 @@ class Copywriter:
 4. 文案邏輯順序：標題 → 介紹說明 → 特色亮點 → 行動呼籲 → 結語
 5. title 類型：精煉的標題或副標題，必須用到目標字數的 80% 以上
 6. content 類型：依 EDM 版面位置填入完整段落內容，每行要有完整意義，填滿為止
-7. cta 類型：簡短、有行動力的按鈕文字（例：「立即了解方案」「點我免費諮詢」）
+7. cta 類型：簡短、有行動力的按鈕文字（例：「立即了解方案」「點我免費諮詢」）；字數**必須嚴格符合指定範圍**，按鈕寬度固定，字數太少會留白，太多會溢出
 8. conclusion 類型：溫暖且完整的結語，**必須達到目標字數的 80% 以上**。若目標 10 字，寫「期待與您攜手，共創安心生活」（12字但被截到10字），而非「與您守家」（4字）
 
 ## 請填入以下 JSON（不可增減欄位）

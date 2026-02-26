@@ -45,7 +45,7 @@ function GenerationForm({ onComplete }) {
       });
       const copyMap = copyResult.copy;
 
-      // Step 3: Merge into flat region format
+      // Step 3: Merge into flat region format (include stroke/shadow defaults from config)
       const merged = configRegions.map((r) => ({
         id: r.id,
         text: copyMap[r.id] ?? '',
@@ -54,10 +54,14 @@ function GenerationForm({ onComplete }) {
         width: r.bbox[2],
         height: r.bbox[3],
         font_size: r.font_size || 32,
-        bold: false,
+        bold: r.bold ?? false,
         color: r.color || [255, 255, 255],
         anchor: r.anchor || 'lt',
         max_width: r.max_width ?? r.bbox[2],
+        stroke_width: r.stroke_width ?? 0,
+        stroke_color: r.stroke_color ?? [0, 0, 0],
+        shadow_offset: r.shadow_offset ?? 0,
+        shadow_color: r.shadow_color ?? [0, 0, 0],
       }));
 
       onComplete(selectedTemplate, merged);

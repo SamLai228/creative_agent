@@ -27,7 +27,7 @@ from src.generator.copywriter import Copywriter
 TEMPLATE_NAME = "edm_template_01.jpeg"
 REFERENCE_NAME = "edm_full_01.png"
 REFERENCES_DIR = TEMPLATE_IMAGES_DIR.parent / "references"
-OUTPUT_TEST_DIR = OUTPUT_DIR / "test"
+OUTPUT_TEST_DIR = OUTPUT_DIR / "test_gpt5.2"
 OUTPUT_TEST_DIR.mkdir(parents=True, exist_ok=True)
 
 REGION_COLORS = {

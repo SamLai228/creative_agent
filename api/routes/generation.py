@@ -360,11 +360,102 @@ class RenderRegion(BaseModel):
     color: List[int] = [255, 255, 255]
     anchor: str = "lt"
     max_width: Optional[float] = None
+    stroke_width: int = 0
+    stroke_color: List[int] = [0, 0, 0]
+    shadow_offset: int = 0
+    shadow_color: List[int] = [0, 0, 0]
 
 
 class RenderRequest(BaseModel):
     template_name: str
     regions: List[RenderRegion]
+    export_format: str = "png"  # "png" or "html"
+
+
+def _build_text_shadow_css(stroke_width: int, stroke_color: List[int],
+                           shadow_offset: int, shadow_color: List[int]) -> str:
+    """產生 CSS text-shadow 字串，同時模擬描邊與投影"""
+    shadows = []
+    if stroke_width > 0:
+        sc = stroke_color
+        for dx in range(-stroke_width, stroke_width + 1):
+            for dy in range(-stroke_width, stroke_width + 1):
+                if dx != 0 or dy != 0:
+                    shadows.append(f"{dx}px {dy}px 0 rgb({sc[0]},{sc[1]},{sc[2]})")
+    if shadow_offset > 0:
+        sc = shadow_color
+        shadows.append(f"{shadow_offset}px {shadow_offset}px 2px rgb({sc[0]},{sc[1]},{sc[2]})")
+    return ", ".join(shadows) if shadows else "none"
+
+
+def _generate_html(template_path, regions: List[RenderRegion]) -> str:
+    """將 regions 疊加到 template 上，產生自包含 HTML 字串"""
+    import base64
+    from PIL import Image as PILImage
+
+    with open(template_path, "rb") as f:
+        img_b64 = base64.b64encode(f.read()).decode()
+    ext = Path(template_path).suffix.lower().lstrip(".")
+    mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png"}.get(ext, "jpeg")
+    img_src = f"data:image/{mime};base64,{img_b64}"
+
+    with PILImage.open(template_path) as img:
+        canvas_w, canvas_h = img.size
+
+    region_divs = []
+    for r in regions:
+        if not r.text.strip():
+            continue
+        c = r.color
+        text_shadow = _build_text_shadow_css(
+            r.stroke_width, r.stroke_color, r.shadow_offset, r.shadow_color
+        )
+        font_weight = "bold" if r.bold else "normal"
+        text_align = (
+            "center" if r.anchor == "center"
+            else "right" if r.anchor == "rt"
+            else "left"
+        )
+        line_height = r.font_size + 10
+        # HTML-escape text, preserve newlines
+        import html as html_module
+        safe_text = html_module.escape(r.text).replace("\n", "<br>")
+        region_divs.append(
+            f'<div style="'
+            f'position:absolute;'
+            f'left:{r.x:.0f}px;top:{r.y:.0f}px;'
+            f'width:{r.width:.0f}px;height:{r.height:.0f}px;'
+            f'font-size:{r.font_size}px;'
+            f'font-weight:{font_weight};'
+            f'color:rgb({c[0]},{c[1]},{c[2]});'
+            f'line-height:{line_height}px;'
+            f'text-align:{text_align};'
+            f'text-shadow:{text_shadow};'
+            f"font-family:'PingFang TC','Noto Sans CJK TC','Microsoft JhengHei',sans-serif;"
+            f'word-break:break-all;overflow:hidden;'
+            f'">{safe_text}</div>'
+        )
+
+    regions_html = "\n    ".join(region_divs)
+    return f"""<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<title>EDM</title>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{background:#e5e7eb;display:flex;justify-content:center;padding:32px;min-height:100vh}}
+.edm{{position:relative;width:{canvas_w}px;height:{canvas_h}px;flex-shrink:0;box-shadow:0 8px 32px rgba(0,0,0,.25)}}
+.edm img{{position:absolute;top:0;left:0;width:100%;height:100%;display:block}}
+</style>
+</head>
+<body>
+<div class="edm">
+  <img src="{img_src}" alt="EDM">
+  {regions_html}
+</div>
+</body>
+</html>"""
 
 
 @router.post("/render-with-copy")
@@ -387,7 +478,21 @@ async def render_with_copy(request: RenderRequest):
     if not template_path.exists():
         raise HTTPException(status_code=404, detail=f"Template 不存在: {request.template_name}")
 
+    edm_dir = OUTPUT_DIR / "edm"
+    edm_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    uid = str(uuid.uuid4())[:8]
+    stem = Path(request.template_name).stem
+
     try:
+        if request.export_format == "html":
+            html_content = _generate_html(template_path, request.regions)
+            filename = f"{stem}_{ts}_{uid}.html"
+            out_path = edm_dir / filename
+            out_path.write_text(html_content, encoding="utf-8")
+            return {"url": f"/output/edm/{filename}", "filename": filename}
+
+        # PNG（預設）
         engine = LayoutEngine()
         canvas = engine.create_canvas(template_path=str(template_path))
 
@@ -399,22 +504,17 @@ async def render_with_copy(request: RenderRequest):
                 "bold": region.bold,
                 "color": region.color,
                 "max_width": region.max_width if region.max_width is not None else region.width,
+                "stroke_width": region.stroke_width,
+                "stroke_color": region.stroke_color,
+                "shadow_offset": region.shadow_offset,
+                "shadow_color": region.shadow_color,
             }
             canvas = engine.place_text_in_region(canvas, region.text, region_dict)
 
-        # 儲存到 output/edm/
-        edm_dir = OUTPUT_DIR / "edm"
-        edm_dir.mkdir(parents=True, exist_ok=True)
-
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        uid = str(uuid.uuid4())[:8]
-        stem = Path(request.template_name).stem
         filename = f"{stem}_{ts}_{uid}.png"
         out_path = edm_dir / filename
-
         canvas.save(str(out_path), "PNG")
-
-        return {"url": f"/output/edm/{filename}"}
+        return {"url": f"/output/edm/{filename}", "filename": filename}
 
     except HTTPException:
         raise

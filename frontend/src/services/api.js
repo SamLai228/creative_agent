@@ -154,9 +154,9 @@ export const generateCopyForTemplate = async (payload) => {
 };
 
 /**
- * 將文字疊加到 template 並匯出 PNG
- * @param {Object} payload - { template_name, regions: [...] }
- * @returns {Promise<{url: string}>}
+ * 將文字疊加到 template 並匯出（PNG 或 HTML）
+ * @param {Object} payload - { template_name, regions: [...], export_format?: 'png'|'html' }
+ * @returns {Promise<{url: string, filename: string}>}
  */
 export const renderWithCopy = async (payload) => {
   const response = await api.post('/api/generation/render-with-copy', payload);

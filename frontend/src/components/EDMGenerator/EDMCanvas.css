@@ -127,6 +127,22 @@
   cursor: not-allowed;
 }
 
+/* Export group: PNG + HTML side by side */
+.export-group {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.export-btn-html {
+  background: rgba(16, 185, 129, 0.85);
+}
+
+.export-btn-html:hover:not(:disabled) {
+  background: rgba(5, 150, 105, 0.9);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
 .spinner-sm {
   width: 14px;
   height: 14px;

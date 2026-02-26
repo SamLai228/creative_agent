@@ -3,7 +3,13 @@ import RegionToolbar from './RegionToolbar';
 import './RegionOverlay.css';
 
 function RegionOverlay({ region, scale, isSelected, onSelect, onDeselect, onChange }) {
-  const { text, x, y, width, height, font_size, bold, color } = region;
+  const {
+    text, x, y, width, height, font_size, bold, color,
+    stroke_width = 0,
+    stroke_color = [0, 0, 0],
+    shadow_offset = 0,
+    shadow_color = [0, 0, 0],
+  } = region;
   const contentRef = useRef(null);
   const dragRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -76,6 +82,27 @@ function RegionOverlay({ region, scale, isSelected, onSelect, onDeselect, onChan
 
   const colorStr = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
 
+  // Build CSS stroke preview via text-shadow (widely supported, avoids webkit-only quirks)
+  const buildStrokeShadow = (sw, sc) => {
+    if (!sw || sw <= 0) return null;
+    const c = `rgb(${sc[0]}, ${sc[1]}, ${sc[2]})`;
+    const shadows = [];
+    for (let dx = -sw; dx <= sw; dx++) {
+      for (let dy = -sw; dy <= sw; dy++) {
+        if (dx !== 0 || dy !== 0) shadows.push(`${dx}px ${dy}px 0 ${c}`);
+      }
+    }
+    return shadows.join(', ');
+  };
+
+  const strokeShadow = buildStrokeShadow(stroke_width, stroke_color);
+  const dropShadow =
+    shadow_offset > 0
+      ? `${shadow_offset}px ${shadow_offset}px 2px rgb(${shadow_color[0]}, ${shadow_color[1]}, ${shadow_color[2]})`
+      : null;
+
+  const textShadow = [strokeShadow, dropShadow].filter(Boolean).join(', ') || undefined;
+
   return (
     <div
       className={`region-overlay${isSelected ? ' selected' : ''}${isEditing ? ' editing' : ''}`}
@@ -111,6 +138,7 @@ function RegionOverlay({ region, scale, isSelected, onSelect, onDeselect, onChan
           fontWeight: bold ? 'bold' : 'normal',
           color: colorStr,
           lineHeight: `${font_size + 10}px`,
+          textShadow,
           pointerEvents: isEditing ? 'text' : 'none',
         }}
         onBlur={handleBlur}

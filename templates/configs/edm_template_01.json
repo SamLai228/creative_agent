@@ -10,7 +10,7 @@
       "id": "title",
       "type": "title",
       "bbox": [
-        66,
+        32,
         80,
         360,
         57
@@ -18,29 +18,43 @@
       "anchor": "lt",
       "font_size": 47,
       "color": [
+        60,
+        60,
+        60
+      ],
+      "max_width": 360,
+      "stroke_width": 3,
+      "stroke_color": [
         255,
         255,
         255
       ],
-      "max_width": 360
+      "bold": true
     },
     {
       "id": "title_2",
       "type": "title",
       "bbox": [
-        66,
+        32,
         162,
-        394,
+        360,
         57
       ],
       "anchor": "lt",
       "font_size": 47,
       "color": [
+        60,
+        60,
+        60
+      ],
+      "max_width": 360,
+      "stroke_width": 3,
+      "stroke_color": [
         255,
         255,
         255
       ],
-      "max_width": 394
+      "bold": true
     },
     {
       "id": "content",
@@ -49,10 +63,10 @@
         66,
         404,
         524,
-        44
+        41
       ],
-      "anchor": "center",
-      "font_size": 34,
+      "anchor": "lt",
+      "font_size": 31,
       "color": [
         90,
         90,
@@ -65,18 +79,18 @@
       "type": "content",
       "bbox": [
         66,
-        444,
-        590,
-        44
+        445,
+        558,
+        41
       ],
-      "anchor": "center",
-      "font_size": 34,
+      "anchor": "lt",
+      "font_size": 31,
       "color": [
         90,
         90,
         90
       ],
-      "max_width": 590
+      "max_width": 558
     },
     {
       "id": "content_3",
@@ -84,17 +98,17 @@
       "bbox": [
         66,
         484,
-        524,
-        44
+        492,
+        41
       ],
-      "anchor": "center",
-      "font_size": 34,
+      "anchor": "lt",
+      "font_size": 31,
       "color": [
         90,
         90,
         90
       ],
-      "max_width": 524
+      "max_width": 492
     },
     {
       "id": "cta",
@@ -112,7 +126,9 @@
         60,
         60
       ],
-      "max_width": 460
+      "max_width": 460,
+      "bold": true,
+      "ref_text_len": 9
     },
     {
       "id": "content_4",
@@ -120,47 +136,48 @@
       "bbox": [
         196,
         728,
-        262,
-        44
+        296,
+        41
       ],
       "anchor": "center",
-      "font_size": 34,
+      "font_size": 31,
       "color": [
         90,
         90,
         90
       ],
-      "max_width": 262
+      "max_width": 296,
+      "bold": true
     },
     {
       "id": "content_5",
       "type": "content",
       "bbox": [
-        66,
+        98,
         808,
-        558,
-        44
+        524,
+        41
       ],
       "anchor": "center",
-      "font_size": 34,
+      "font_size": 31,
       "color": [
         90,
         90,
         90
       ],
-      "max_width": 558
+      "max_width": 524
     },
     {
       "id": "content_6",
       "type": "content",
       "bbox": [
         98,
-        848,
+        849,
         492,
-        44
+        41
       ],
       "anchor": "center",
-      "font_size": 34,
+      "font_size": 31,
       "color": [
         90,
         90,
@@ -178,13 +195,15 @@
         52
       ],
       "anchor": "center",
-      "font_size": 39,
+      "font_size": 36,
       "color": [
         255,
         255,
         255
       ],
-      "max_width": 296
+      "max_width": 296,
+      "bold": true,
+      "ref_text_len": 10
     },
     {
       "id": "content_7",
@@ -193,58 +212,59 @@
         164,
         1132,
         360,
-        44
+        41
       ],
       "anchor": "center",
-      "font_size": 34,
+      "font_size": 31,
       "color": [
         90,
         90,
         90
       ],
-      "max_width": 360
-    },
-    {
-      "id": "cta_3",
-      "type": "cta",
-      "bbox": [
-        196,
-        1172,
-        360,
-        44
-      ],
-      "anchor": "center",
-      "font_size": 34,
-      "color": [
-        255,
-        255,
-        255
-      ],
-      "max_width": 360
-    },
-    {
-      "id": "cta_4",
-      "type": "cta",
-      "bbox": [
-        196,
-        1212,
-        360,
-        44
-      ],
-      "anchor": "center",
-      "font_size": 34,
-      "color": [
-        255,
-        255,
-        255
-      ],
-      "max_width": 360
+      "max_width": 360,
+      "bold": true
     },
     {
       "id": "content_8",
       "type": "content",
       "bbox": [
-        32,
+        230,
+        1172,
+        296,
+        41
+      ],
+      "anchor": "lt",
+      "font_size": 31,
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "max_width": 296
+    },
+    {
+      "id": "content_9",
+      "type": "content",
+      "bbox": [
+        230,
+        1212,
+        328,
+        41
+      ],
+      "anchor": "lt",
+      "font_size": 31,
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "max_width": 328
+    },
+    {
+      "id": "content_10",
+      "type": "content",
+      "bbox": [
+        0,
         1374,
         360,
         44
@@ -256,13 +276,14 @@
         60,
         60
       ],
-      "max_width": 360
+      "max_width": 360,
+      "bold": true
     },
     {
-      "id": "content_9",
+      "id": "content_11",
       "type": "content",
       "bbox": [
-        32,
+        0,
         1454,
         360,
         44
@@ -274,13 +295,14 @@
         60,
         60
       ],
-      "max_width": 360
+      "max_width": 360,
+      "bold": true
     },
     {
-      "id": "content_10",
+      "id": "content_12",
       "type": "content",
       "bbox": [
-        32,
+        0,
         1536,
         360,
         44
@@ -292,32 +314,35 @@
         60,
         60
       ],
-      "max_width": 360
+      "max_width": 360,
+      "bold": true
     },
     {
-      "id": "cta_5",
+      "id": "cta_3",
       "type": "cta",
       "bbox": [
         394,
         1454,
-        196,
-        44
+        230,
+        52
       ],
       "anchor": "center",
-      "font_size": 34,
+      "font_size": 36,
       "color": [
         255,
         255,
         255
       ],
-      "max_width": 196
+      "max_width": 230,
+      "bold": true,
+      "ref_text_len": 5
     },
     {
       "id": "conclusion",
       "type": "conclusion",
       "bbox": [
         394,
-        1536,
+        1510,
         230,
         34
       ],
