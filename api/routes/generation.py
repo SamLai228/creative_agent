@@ -178,45 +178,6 @@ async def generate_copy(request: Dict):
         )
 
 
-@router.post("/detect-template-regions")
-async def detect_template_regions(template_name: str = Query(..., description="Template 檔名")):
-    """
-    手動觸發 template 區域識別
-    
-    這個端點會使用 Vision API 分析 template 圖片，識別出所有文字區域
-    （標題、內文、CTA 按鈕等），並保存配置檔案。
-    
-    Args:
-        template_name: Template 檔名（例如：edm_template_01.jpeg）
-        
-    Returns:
-        識別結果配置
-    """
-    try:
-        from src.generator.template_engine import TemplateEngine
-        engine = TemplateEngine()
-        
-        # 識別並保存區域配置
-        config = engine.detect_and_save_regions(template_name)
-        
-        return {
-            "template_name": config.get("template_name"),
-            "template_image": config.get("template_image"),
-            "canvas_size": config.get("canvas_size"),
-            "regions_count": len(config.get("regions", [])),
-            "regions": config.get("regions", []),
-            "message": f"Template 區域識別完成，共識別 {len(config.get('regions', []))} 個區域"
-        }
-    except FileNotFoundError as e:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Template 圖片不存在: {str(e)}"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"區域識別失敗: {str(e)}"
-        )
 
 
 @router.post("/generate-copy-for-template")
@@ -246,7 +207,7 @@ async def generate_copy_for_template(request: Dict):
 
         # 載入 template region 配置（若不存在會拋 404）
         engine = TemplateEngine()
-        config = engine.load_template_config(template_name, auto_detect=False)
+        config = engine.load_template_config(template_name)
         if not config:
             raise HTTPException(
                 status_code=404,
@@ -342,8 +303,8 @@ async def get_template_regions(template_name: str = Query(..., description="Temp
         from src.generator.template_engine import TemplateEngine
         engine = TemplateEngine()
         
-        config = engine.load_template_config(template_name, auto_detect=False)
-        
+        config = engine.load_template_config(template_name)
+
         if not config:
             raise HTTPException(
                 status_code=404,

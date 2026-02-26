@@ -199,66 +199,27 @@ class TemplateEngine:
         
         return result
     
-    def load_template_config(self, template_name: str, auto_detect: bool = True) -> Optional[Dict]:
+    def load_template_config(self, template_name: str) -> Optional[Dict]:
         """
         載入 template 的區域配置
-        
+
         Args:
             template_name: Template 檔名（例如：edm_template_01.jpeg）
-            auto_detect: 如果配置不存在，是否自動識別
-            
+
         Returns:
-            Template 配置字典，如果不存在且 auto_detect=False 則返回 None
+            Template 配置字典，如果不存在則返回 None
         """
-        # 取得 template 名稱（不含副檔名）
         template_stem = Path(template_name).stem
         config_file = self.configs_dir / f"{template_stem}.json"
-        
-        # 如果配置存在，直接載入
+
         if config_file.exists():
             try:
                 with open(config_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
             except Exception as e:
                 print(f"警告: 無法載入 template 配置 {template_stem}: {str(e)}")
-        
-        # 如果配置不存在且允許自動識別
-        if auto_detect:
-            try:
-                print(f"Template 配置不存在，開始自動識別區域: {template_name}")
-                config = self.detect_and_save_regions(template_name)
-                return config
-            except Exception as e:
-                print(f"警告: 自動識別區域失敗: {str(e)}")
-                return None
-        
+
         return None
-    
-    def detect_and_save_regions(self, template_name: str) -> Dict:
-        """
-        識別 template 的區域並保存配置
-        
-        Args:
-            template_name: Template 檔名
-            
-        Returns:
-            識別結果配置字典
-        """
-        # 取得區域識別器
-        detector = self._get_region_detector()
-        
-        # 識別區域
-        config = detector.detect_regions(template_name)
-        
-        # 保存配置
-        template_stem = Path(template_name).stem
-        config_file = self.configs_dir / f"{template_stem}.json"
-        
-        with open(config_file, 'w', encoding='utf-8') as f:
-            json.dump(config, f, ensure_ascii=False, indent=2)
-        
-        print(f"Template 區域配置已保存: {config_file}")
-        return config
     
     def get_template_regions(self, template_name: str) -> List[Dict]:
         """

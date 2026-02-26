@@ -118,7 +118,7 @@ class EDMGenerator:
             canvas = self.layout_engine.create_canvas(template_path=template_path)
             
             # 載入 template 配置
-            template_config = self.template_engine.load_template_config(template_path, auto_detect=True)
+            template_config = self.template_engine.load_template_config(template_path)
             
             if template_config:
                 # 使用 template 區域放置文字
