@@ -1,0 +1,18 @@
+{
+  "name": "creative_agent",
+  "version": "1.0.0",
+  "description": "LLM 驅動的 EDM 生成工具：上傳圖片素材 → 自動貼標 → 語義搜尋 → 生成 EDM 圖文。",
+  "main": "edm_presentation.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}

@@ -52,6 +52,9 @@ templates/references/
 
 # Frontend
 frontend/node_modules/
+
+# Node (root)
+node_modules/
 frontend/dist/
 frontend/.vite/
 frontend/build/
