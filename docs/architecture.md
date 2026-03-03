@@ -3,6 +3,7 @@
 ```mermaid
 flowchart LR
     subgraph Frontend["Frontend - React/Vite"]
+        direction TB
         UI_Upload["素材上傳/貼標"]
         UI_List["素材列表"]
         UI_Generate["EDM 生成"]
