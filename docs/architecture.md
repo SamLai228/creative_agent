@@ -32,8 +32,6 @@ flowchart LR
 
     RegionDetector["template_region_detector.py<br/>偵測文字區域（前置）"]
 
-    OpenAI["OpenAI Vision API"]
-
     DB[("material_tags.json")]
     Assets[("assets/<br/>素材圖片")]
     TplRefs[("templates/references/<br/>完稿 reference")]
@@ -50,7 +48,6 @@ flowchart LR
     R_Generation -->|"render-with-copy"| LayoutEngine
 
     ImageAnalyzer --> LLMTagger
-    LLMTagger --> OpenAI
     LLMTagger --> TagDatabase
     TagDatabase --> DB
 
@@ -60,11 +57,9 @@ flowchart LR
     EDMGenerator --> TemplateEngine
     MaterialSelector --> DB
     TplRefs --> RegionDetector
-    RegionDetector --> OpenAI
     RegionDetector --> TplConfigs
     TplConfigs --> Copywriter
     TplConfigs --> TemplateEngine
-    Copywriter --> OpenAI
     Assets --> TemplateEngine
     TemplateEngine --> LayoutEngine
     LayoutEngine --> OutputHandler
