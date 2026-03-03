@@ -35,7 +35,6 @@ flowchart LR
 
     DB[("material_tags.json")]
     Assets[("assets/<br/>素材圖片")]
-    TplImages[("templates/images/<br/>空白範本")]
     TplRefs[("templates/references/<br/>完稿 reference")]
     TplConfigs[("templates/configs/<br/>region config JSON")]
 
@@ -66,8 +65,6 @@ flowchart LR
     TplConfigs --> Copywriter
     TplConfigs --> TemplateEngine
     Copywriter --> OpenAI
-    TplImages --> TemplateEngine
-    TplImages --> LayoutEngine
     Assets --> TemplateEngine
     TemplateEngine --> LayoutEngine
     LayoutEngine --> OutputHandler
