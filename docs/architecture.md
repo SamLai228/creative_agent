@@ -24,12 +24,13 @@ flowchart LR
     subgraph Generator["Generator"]
         EDMGenerator["edm_generator.py<br/>生成主入口"]
         MaterialSelector["material_selector.py<br/>搜尋素材"]
-        RegionDetector["template_region_detector.py<br/>偵測文字區域"]
         TemplateEngine["template_engine.py<br/>載入 Template 配置"]
         LayoutEngine["layout_engine.py<br/>文字疊加排版"]
         Copywriter["copywriter.py<br/>LLM 生成文案"]
         OutputHandler["output_handler.py"]
     end
+
+    RegionDetector["template_region_detector.py<br/>偵測文字區域（前置）"]
 
     OpenAI["OpenAI Vision API"]
 
@@ -54,8 +55,8 @@ flowchart LR
     LLMTagger --> TagDatabase
     TagDatabase --> DB
 
+    R_Generation -->|"detect-regions"| RegionDetector
     EDMGenerator --> MaterialSelector
-    EDMGenerator --> RegionDetector
     EDMGenerator --> Copywriter
     EDMGenerator --> TemplateEngine
     MaterialSelector --> DB
