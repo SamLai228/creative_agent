@@ -7,6 +7,7 @@ flowchart LR
         UI_Upload["素材上傳/貼標"]
         UI_List["素材列表"]
         UI_Generate["EDM 生成"]
+        UI_Upload ~~~ UI_List ~~~ UI_Generate
     end
 
     subgraph Backend["FastAPI Backend :8000"]
