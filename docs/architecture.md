@@ -2,8 +2,6 @@
 
 ```mermaid
 flowchart LR
-    Browser["使用者瀏覽器<br/>http://localhost:5173"]
-
     subgraph Frontend["Frontend - React/Vite"]
         UI_Upload["素材上傳/貼標"]
         UI_List["素材列表"]
@@ -43,8 +41,7 @@ flowchart LR
         Output[("output/<br/>生成結果")]
     end
 
-    Browser -->|"Vite Proxy /api"| Backend
-    Frontend --- Browser
+    Frontend -->|"Vite Proxy /api"| Backend
 
     R_Materials --> MaterialFactory
     R_Generation --> Generator
