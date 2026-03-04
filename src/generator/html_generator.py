@@ -5,30 +5,28 @@ from src.config import OPENAI_API_KEY, OPENAI_MODEL
 
 BASE_HTML_PATH = Path(__file__).parent.parent.parent / "templates" / "html" / "edm_base.html"
 
-SYSTEM_PROMPT = """你是一位專業的 EDM 設計師，擅長撰寫 HTML EDM。
-根據使用者提供的需求，生成一份繁體中文 HTML EDM。
+SYSTEM_PROMPT = """你是一位 EDM 文案撰寫專家。
+你的任務是：給定一份 HTML EDM 範本和新的需求，**完整保留 HTML 結構與 CSS 樣式，只替換文字內容**。
 請直接輸出純 HTML，不要任何 markdown 包裝或說明文字。"""
 
-USER_PROMPT_TEMPLATE = """請根據以下需求，參考範本 HTML，生成一份新的 HTML EDM。
+USER_PROMPT_TEMPLATE = """以下是一份 HTML EDM 範本。請根據新需求，**只修改文字內容**，輸出完整 HTML。
 
-<reference_html>
-{reference_html}
-</reference_html>
+規則（嚴格遵守）：
+1. HTML 結構、div 層級、class、inline style 全部原封不動複製
+2. 只替換各區塊內的文字（標題、內文、按鈕文字、說明文字）
+3. 不可新增、刪除或重排任何 div 區塊
+4. 不可修改任何 CSS 屬性（顏色、字體大小、padding、border-radius 等全部保持不變）
+5. 輸出純 HTML，從 <!DOCTYPE html> 開始，不含 markdown 標記
 
-需求：
+新需求：
 - 產品／服務名稱：{product_name}
 - 活動類型：{promotion_type}
 - 核心訊息：{key_message}
 - 目標受眾：{target_audience}
 - 語氣風格：{tone}
 
-規則：
-1. 維持與範本相似的版型結構與視覺風格（色系、區塊配置、字體層級）
-2. 所有文字改為符合需求的新繁體中文文案
-3. 配色可依產品性質微調，但維持整體質感
-4. 輸出純 HTML（含 inline CSS），不含 markdown 標記
-5. 寬度固定 600px
-6. 不包含任何 <img> 標籤"""
+範本 HTML：
+{reference_html}"""
 
 
 class HTMLGenerator:
