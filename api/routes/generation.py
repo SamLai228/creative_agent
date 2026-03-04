@@ -327,6 +327,33 @@ async def get_template_regions(template_name: str = Query(..., description="Temp
         )
 
 
+class GenerateHTMLRequest(BaseModel):
+    product_name: str = ""
+    promotion_type: str = ""
+    key_message: str = ""
+    target_audience: str = ""
+    tone: str = ""
+
+
+@router.post("/generate-html")
+async def generate_html(request: GenerateHTMLRequest):
+    """
+    根據需求生成 HTML EDM。
+
+    Returns:
+        { "html": "..." }
+    """
+    try:
+        from src.generator.html_generator import HTMLGenerator
+        generator = HTMLGenerator()
+        html = generator.generate(request.dict())
+        return {"html": html}
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"HTML 生成失敗: {str(e)}")
+
+
 @router.get("/templates")
 async def list_templates():
     """

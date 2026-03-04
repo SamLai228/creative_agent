@@ -154,6 +154,16 @@ export const generateCopyForTemplate = async (payload) => {
 };
 
 /**
+ * 根據需求生成 HTML EDM
+ * @param {Object} requirements - { product_name, promotion_type, key_message, target_audience, tone }
+ * @returns {Promise<{html: string}>}
+ */
+export const generateHtml = async (requirements) => {
+  const response = await api.post('/api/generation/generate-html', requirements);
+  return response.data;
+};
+
+/**
  * 將文字疊加到 template 並匯出（PNG 或 HTML）
  * @param {Object} payload - { template_name, regions: [...], export_format?: 'png'|'html' }
  * @returns {Promise<{url: string, filename: string}>}

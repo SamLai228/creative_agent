@@ -16,27 +16,18 @@ flowchart LR
     end
 
     subgraph Generator["Generator"]
-        Detect["Region 偵測\n(LLM Vision + reference)"]
-        Copy["文案生成\n(LLM per region)"]
-        Render["圖文合成\n(Pillow)"]
-        Detect --> Copy --> Render
+        HTMLGen["HTML EDM 生成\n(LLM + reference HTML)"]
     end
 
-    OpenAI["OpenAI Vision API"]
-    Templates[("templates/\nimages + configs")]
-    Output[("output/\nEDM PNG")]
+    OpenAI["OpenAI API"]
+    HTMLBase[("templates/html/\nedm_base.html")]
 
     User -->|"Vite Proxy"| Backend
     API_Mat --> Tagger
     Tagger --> OpenAI
 
-    API_Gen --> Detect
-    API_Gen -->|"render-with-copy"| Render
-    Detect --> OpenAI
-    Copy --> OpenAI
-    Templates --> Detect
-    Templates --> Render
-    DB --> Copy
-    Render --> Output
-    Output -->|"下載"| User
+    API_Gen -->|"generate-html"| HTMLGen
+    HTMLBase -->|"reference"| HTMLGen
+    HTMLGen --> OpenAI
+    HTMLGen -->|"HTML → iframe"| User
 ```

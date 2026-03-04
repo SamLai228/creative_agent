@@ -22,47 +22,24 @@ flowchart LR
     end
 
     subgraph Generator["Generator"]
-        EDMGenerator["edm_generator.py<br/>生成主入口"]
-        MaterialSelector["material_selector.py<br/>搜尋素材"]
-        TemplateEngine["template_engine.py<br/>載入 Template 配置"]
-        LayoutEngine["layout_engine.py<br/>文字疊加排版"]
-        Copywriter["copywriter.py<br/>LLM 生成文案"]
-        OutputHandler["output_handler.py"]
+        HTMLGenerator["html_generator.py<br/>LLM 生成 HTML EDM"]
     end
-
-    RegionDetector["template_region_detector.py<br/>偵測文字區域（前置）"]
 
     DB[("material_tags.json")]
     Assets[("assets/<br/>素材圖片")]
-    TplRefs[("templates/references/<br/>完稿 reference")]
-    TplConfigs[("templates/configs/<br/>region config JSON")]
-
-    subgraph OutputZone["輸出"]
-        Output[("output/<br/>生成結果")]
-    end
+    HTMLBase[("templates/html/<br/>edm_base.html")]
 
     Frontend -->|"Vite Proxy /api"| Backend
 
     R_Materials --> MaterialFactory
-    R_Generation --> Generator
-    R_Generation -->|"render-with-copy"| LayoutEngine
+    R_Generation -->|"generate-html"| HTMLGenerator
 
     ImageAnalyzer --> LLMTagger
     LLMTagger --> TagDatabase
     TagDatabase --> DB
+    Assets --> TagDatabase
 
-    R_Generation -->|"detect-regions"| RegionDetector
-    EDMGenerator --> MaterialSelector
-    EDMGenerator --> Copywriter
-    EDMGenerator --> TemplateEngine
-    MaterialSelector --> DB
-    TplRefs --> RegionDetector
-    RegionDetector --> TplConfigs
-    TplConfigs --> Copywriter
-    TplConfigs --> TemplateEngine
-    Assets --> TemplateEngine
-    TemplateEngine --> LayoutEngine
-    LayoutEngine --> OutputHandler
-    LayoutEngine --> Output
-    OutputHandler --> Output
+    HTMLBase -->|"reference"| HTMLGenerator
+    HTMLGenerator -->|"HTML string"| R_Generation
+    R_Generation -->|"{ html }"| Frontend
 ```

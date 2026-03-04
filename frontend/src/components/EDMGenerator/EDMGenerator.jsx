@@ -1,30 +1,24 @@
 import { useState } from 'react';
 import GenerationForm from './GenerationForm';
-import EDMCanvas from './EDMCanvas';
+import EDMPreview from './EDMPreview';
 import './EDMGenerator.css';
 
 function EDMGenerator() {
-  const [step, setStep] = useState('form'); // 'form' | 'editor' | 'done'
-  const [templateName, setTemplateName] = useState('');
-  const [regions, setRegions] = useState([]);
-  const [exportedUrl, setExportedUrl] = useState('');
+  const [step, setStep] = useState('form'); // 'form' | 'preview'
+  const [html, setHtml] = useState('');
 
-  const handleGenerateDone = (name, generatedRegions) => {
-    setTemplateName(name);
-    setRegions(generatedRegions);
-    setStep('editor');
+  const handleGenerateDone = (generatedHtml) => {
+    setHtml(generatedHtml);
+    setStep('preview');
   };
 
-  const handleExportDone = (url) => {
-    setExportedUrl(url);
-    setStep('done');
-  };
-
-  const handleReset = () => {
+  const handleBack = () => {
     setStep('form');
-    setRegions([]);
-    setExportedUrl('');
-    setTemplateName('');
+  };
+
+  const handleRegenerate = () => {
+    setStep('form');
+    setHtml('');
   };
 
   return (
@@ -32,27 +26,12 @@ function EDMGenerator() {
       {step === 'form' && (
         <GenerationForm onComplete={handleGenerateDone} />
       )}
-      {step === 'editor' && (
-        <EDMCanvas
-          templateName={templateName}
-          regions={regions}
-          onRegionsChange={setRegions}
-          onExport={handleExportDone}
-          onBack={() => setStep('form')}
+      {step === 'preview' && (
+        <EDMPreview
+          html={html}
+          onBack={handleBack}
+          onRegenerate={handleRegenerate}
         />
-      )}
-      {step === 'done' && (
-        <div className="export-done glass-card">
-          <h2>匯出完成！</h2>
-          <div className="export-preview-wrap">
-            <img src={exportedUrl} alt="Exported EDM" className="export-preview" />
-          </div>
-          <div className="export-actions">
-            <a href={exportedUrl} download className="btn-primary">下載 PNG</a>
-            <button onClick={() => setStep('editor')} className="btn-secondary">返回編輯</button>
-            <button onClick={handleReset} className="btn-ghost">重新開始</button>
-          </div>
-        </div>
       )}
     </div>
   );
