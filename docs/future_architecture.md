@@ -8,17 +8,57 @@
 
 將傳統行銷素材製作流程中的三個職能單位，各自對應一個 AI Agent，透過 orchestrator 串聯，實現從需求輸入到合規 EDM 輸出的全自動化生產線。
 
-```
-使用者輸入需求
-      │
-      ▼
-┌─────────────┐
-│ Orchestrator │  ← 協調三個 Agent 的執行順序與資料傳遞
-└─────────────┘
-      │
-      ├──① 文案 Agent
-      ├──② UI/UX Agent
-      └──③ 審核 Agent
+```mermaid
+flowchart LR
+    GForm["**GenerationForm.jsx**\n需求輸入\n產品 / 受眾 / 語氣"]
+    Orch["**orchestrator.py**\nAgentOrchestrator\n協調三個 Agent 執行順序"]
+
+    subgraph CopyAgent["文案 Agent · copy_agent.py"]
+        direction LR
+        TitleGen["generate_title()\n標題生成"]
+        BodyGen["generate_body()\n文案生成"]
+        CTAGen["generate_cta()\nCTA 設計"]
+        AssetHint["suggest_assets()\n素材元件發想"]
+        TitleGen --> BodyGen --> CTAGen --> AssetHint
+    end
+
+    subgraph UIAgent["UI/UX Agent · uiux_agent.py"]
+        direction LR
+        MatSearch["**material_selector.py**\nsearch_by_hints()\n素材檢索"]
+        MatPersonal["personalize()\n素材個人化"]
+        GenHTML["**html_generator.py**\ngenerate()\n生成 HTML"]
+        Preview["**preview_renderer.py**\nrender_preview()\n預覽圖展示"]
+        MatSearch --> MatPersonal --> GenHTML --> Preview
+    end
+
+    subgraph ReviewAgent["審核 Agent · review_agent.py"]
+        direction LR
+        LegalCheck["check_legal()\n法務檢核"]
+        ProductCheck["check_product()\n商品檢核"]
+        BizCheck["check_business()\n行企檢核"]
+        BrandCheck["check_brand()\n品牌檢核"]
+        LegalCheck --> ProductCheck --> BizCheck --> BrandCheck
+    end
+
+    DB[("material_tags.json")]
+    Template[("templates/html/\nedm_base_template.html")]
+    Rules[("review_rules/\n審核規則集")]
+    Result[("output/\n行銷素材 HTML")]
+    OpenAI(["OpenAI API"])
+
+    GForm -->|"需求"| Orch
+    Orch -->|"run_copy_agent()"| CopyAgent
+    CopyAgent -->|"文案物件 + asset_hints"| UIAgent
+    DB --> MatSearch
+    Template --> GenHTML
+    UIAgent -->|"HTML + preview.png"| ReviewAgent
+    Rules --> ReviewAgent
+    ReviewAgent -->|"approved"| Result
+    ReviewAgent -->|"issues → retry"| Orch
+
+    TitleGen -->|"Chat API"| OpenAI
+    MatSearch -->|"語義搜尋"| DB
+    BrandCheck -->|"Vision API"| OpenAI
 ```
 
 ---
