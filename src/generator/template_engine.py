@@ -3,12 +3,11 @@ from pathlib import Path
 from typing import Dict, List, Optional
 import json
 from src.config import TEMPLATE_DIR, TEMPLATE_CONFIGS_DIR, TEMPLATE_IMAGES_DIR
-from .template_region_detector import TemplateRegionDetector
 
 
 class TemplateEngine:
     """EDM 模板引擎"""
-    
+
     def __init__(self):
         self.template_dir = TEMPLATE_DIR
         self.template_dir.mkdir(parents=True, exist_ok=True)
@@ -16,19 +15,10 @@ class TemplateEngine:
         self.layouts_dir.mkdir(parents=True, exist_ok=True)
         self.configs_dir = TEMPLATE_CONFIGS_DIR
         self.configs_dir.mkdir(parents=True, exist_ok=True)
-        
-        # 初始化區域識別器（延遲載入）
-        self._region_detector = None
-        
+
         # 初始化預設版面配置
         self._init_default_layouts()
-    
-    def _get_region_detector(self) -> TemplateRegionDetector:
-        """取得區域識別器（延遲初始化）"""
-        if self._region_detector is None:
-            self._region_detector = TemplateRegionDetector()
-        return self._region_detector
-    
+
     def _init_default_layouts(self):
         """初始化預設版面配置"""
         default_layouts = {

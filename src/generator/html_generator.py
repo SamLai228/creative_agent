@@ -9,18 +9,23 @@ TEMPLATE_PATH = Path(__file__).parent.parent.parent / "templates" / "html" / "ed
 
 # 模板中所有 placeholder 的說明，提供給 LLM
 PLACEHOLDER_SCHEMA = {
-    "title_1":              "主標題第一行（約 12–18 字）",
-    "title_2":              "主標題第二行（約 8–14 字，可為副標題或延伸）",
-    "body_paragraph":       "正文段落，2–3 句話，說明情境或問題（用 <br/> 換行）",
-    "question_pill":        "引導問句，用膠囊框呈現（約 12–18 字）",
-    "supporting_text":      "補充說明，2–3 句話，呼應問句（用 <br/> 換行）",
-    "cta_button":           "主要 CTA 按鈕文字（5–10 字，不含 >）",
-    "product_section_label":"產品區塊標題（約 8–12 字，帶省略號結尾）",
-    "product_name":         "產品正式名稱",
-    "product_subtitle":     "產品副名稱或類型說明",
-    "closing_quote":        "結尾激勵金句，2–3 行（用 <br/> 換行）",
-    "consult_button":       "諮詢按鈕文字（3–6 字，不含 >）",
-    "consult_note":         "按鈕下方輔助說明（一句話，約 10 字）",
+    "title":          "主標題第一行（約 12–18 字）",
+    "title_2":        "主標題第二行（約 8–14 字，延伸或副標）",
+    "content":        "痛點第一行（1 句話，描述現況或數據）",
+    "content_2":      "痛點第二行（1 句話，帶出問題場景）",
+    "content_3":      "痛點第三行（1 句話，具體痛點或問題）",
+    "content_4":      "引導問句（12–18 字，粗體膠囊呈現）",
+    "content_5":      "解決方案第一行（1 句話）",
+    "content_6":      "解決方案第二行（1 句話）",
+    "content_7":      "解決方案第三行（1 句話，收尾）",
+    "cta":            "主 CTA 按鈕文字（5–10 字）",
+    "product_intro":  "產品推薦引導語（約 10–15 字，例：也許適合你的醫療保障…）",
+    "product_name":   "產品全名（精準完整，例：新 iHealth 一年期住院醫療健康保險（外溢型））",
+    "content_8":      "底部金句第一行（粗體，約 8–12 字）",
+    "content_9":      "底部金句第二行（粗體，約 8–12 字）",
+    "content_10":     "底部金句第三行（粗體，約 8–12 字）",
+    "cta_2":          "諮詢 CTA 按鈕文字（3–6 字）",
+    "conclusion":     "按鈕下方輔助說明（一句話，約 10 字）",
 }
 
 SYSTEM_PROMPT = "你是 EDM 文案撰寫專家，請根據需求生成繁體中文文案，以 JSON 格式輸出，不要任何額外說明。"
