@@ -1,9 +1,30 @@
 import { useState, useRef, useCallback } from 'react';
+import html2canvas from 'html2canvas';
+import { savePNG } from '../../services/api';
 import './EDMPreview.css';
 
 function EDMPreview({ html, onBack, onRegenerate }) {
   const [tab, setTab] = useState('preview'); // 'preview' | 'code'
+  const [saving, setSaving] = useState(false);
   const iframeRef = useRef(null);
+
+  const handleSavePNG = useCallback(async () => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    setSaving(true);
+    try {
+      const target = iframe.contentDocument?.body;
+      if (!target) throw new Error('無法存取 iframe 內容');
+      const canvas = await html2canvas(target, { useCORS: true, scale: 2 });
+      const imageData = canvas.toDataURL('image/png');
+      const result = await savePNG(imageData);
+      alert(`已儲存至 ${result.saved_path}`);
+    } catch (e) {
+      alert('儲存失敗：' + e.message);
+    } finally {
+      setSaving(false);
+    }
+  }, []);
 
   // 讓 iframe 高度自動貼合內容，避免跳版
   const handleIframeLoad = useCallback(() => {
@@ -37,6 +58,9 @@ function EDMPreview({ html, onBack, onRegenerate }) {
           </button>
         </div>
 
+        <button onClick={handleSavePNG} className="btn-secondary" disabled={saving}>
+          {saving ? '儲存中…' : '儲存為 PNG'}
+        </button>
         <button onClick={onRegenerate} className="btn-ghost">重新生成</button>
       </div>
 

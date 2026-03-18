@@ -163,6 +163,11 @@ export const generateHtml = async (requirements) => {
   return response.data;
 };
 
+export const savePNG = async (imageData, filename = '') => {
+  const response = await api.post('/api/generation/save-png', { image_data: imageData, filename });
+  return response.data;
+};
+
 /**
  * 將文字疊加到 template 並匯出（PNG 或 HTML）
  * @param {Object} payload - { template_name, regions: [...], export_format?: 'png'|'html' }
