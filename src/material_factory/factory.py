@@ -5,6 +5,7 @@ from src.config import ASSETS_DIR
 from .image_analyzer import ImageAnalyzer
 from .llm_tagger import LLMTagger
 from .tag_database import TagDatabase
+from .bg_remover import remove_background
 
 
 class MaterialFactory:
@@ -15,40 +16,117 @@ class MaterialFactory:
         self.llm_tagger = LLMTagger()
         self.tag_db = TagDatabase()
     
+    def _run_bg_removal(self, image_path: Path) -> Optional[str]:
+        """
+        對單張圖片執行去背，回傳去背檔案的相對路徑（相對於專案根目錄）。
+        失敗時印出警告並回傳 None。
+        """
+        try:
+            nobg_path = remove_background(image_path)
+            return str(nobg_path.relative_to(ASSETS_DIR.parent))
+        except Exception as e:
+            print(f"  - 去背失敗，略過：{e}")
+            return None
+
     def tag_single_material(self, image_path: Path, force_update: bool = False) -> Dict:
         """
-        為單一素材貼標
-        
+        為單一素材貼標（含自動去背）。
+
+        流程：
+        1. 去背（若 _nobg.png 已存在則跳過）
+        2. 若已有標籤且非 force_update：補上 nobg_path 後直接回傳
+        3. 否則用 LLM 生成標籤，一併存入 nobg_path
+
         Args:
             image_path: 圖片路徑
-            force_update: 是否強制更新已存在的標籤
-            
+            force_update: 是否強制重新貼標
+
         Returns:
             標籤資訊字典
         """
-        # 檢查是否已有標籤
+        # Step 1：去背（無論是否已有標籤都執行，確保 _nobg.png 存在）
+        nobg_rel = self._run_bg_removal(image_path)
+
+        # 統一用相對路徑作為 DB key，避免絕對路徑/相對路徑不一致
+        try:
+            db_key = str(image_path.relative_to(ASSETS_DIR.parent))
+        except ValueError:
+            db_key = str(image_path)
+
+        # Step 2：若已有標籤且不強制更新，補上 nobg_path 後回傳
         if not force_update:
-            existing_tags = self.tag_db.get_tags(str(image_path))
+            existing_tags = self.tag_db.get_tags(db_key)
             if existing_tags:
+                if nobg_rel and existing_tags.get("nobg_path") != nobg_rel:
+                    existing_tags["nobg_path"] = nobg_rel
+                    self.tag_db.add_tags(db_key, existing_tags)
                 print(f"素材已有標籤，跳過: {image_path.name}")
                 return existing_tags
-        
+
         print(f"正在分析素材: {image_path.name}")
-        
-        # 分析圖片
+
+        # 分析圖片（使用原圖，保留完整內容供 LLM 理解）
         image_info = self.image_analyzer.analyze(image_path)
         print(f"  - 尺寸: {image_info['width']}x{image_info['height']}")
         print(f"  - 長寬比: {image_info['aspect_ratio']}")
-        
+
         # 使用 LLM 生成標籤
         print(f"  - 正在呼叫 LLM API 生成標籤...")
         tags = self.llm_tagger.generate_tags(image_path, image_info)
-        
-        # 儲存標籤
-        self.tag_db.add_tags(str(image_path), tags)
+
+        if nobg_rel:
+            tags["nobg_path"] = nobg_rel
+            # file_path / file_name 直接指向去背版本，供後續選圖使用
+            tags["file_path"] = nobg_rel
+            tags["file_name"] = Path(nobg_rel).name
+
+        # 儲存標籤（用相對路徑 key）
+        self.tag_db.add_tags(db_key, tags)
         print(f"  ✓ 標籤已儲存")
-        
+
         return tags
+
+    def remove_bg_all(self, directory: Optional[Path] = None) -> int:
+        """
+        批次對現有素材去背，並將 nobg_path 寫入 tag DB。
+        已有去背檔案的素材會跳過處理，只補上 nobg_path 欄位。
+
+        Returns:
+            成功處理的數量
+        """
+        if directory is None:
+            directory = ASSETS_DIR
+
+        all_tags = self.tag_db.get_all_tags()
+        # 只處理有標籤的原始素材（排除 _nobg.png 本身）
+        targets = [
+            Path(ASSETS_DIR.parent / fp)
+            for fp in all_tags
+            if "_nobg" not in fp
+        ]
+
+        print(f"找到 {len(targets)} 個素材，開始批次去背...")
+        success = 0
+        for i, image_path in enumerate(targets, 1):
+            print(f"\n[{i}/{len(targets)}] {image_path.name}")
+            if not image_path.exists():
+                print(f"  - 檔案不存在，跳過")
+                continue
+            nobg_rel = self._run_bg_removal(image_path)
+            if nobg_rel:
+                key = str(image_path.relative_to(ASSETS_DIR.parent))
+                tags = all_tags.get(key)
+                if tags is None:
+                    print(f"  - 無標籤記錄，跳過 DB 更新")
+                    success += 1
+                    continue
+                if tags.get("nobg_path") != nobg_rel:
+                    tags["nobg_path"] = nobg_rel
+                    self.tag_db.add_tags(key, tags)
+                success += 1
+
+        print(f"\n完成！成功去背 {success}/{len(targets)} 個素材")
+        return success
     
     def tag_batch_materials(
         self,

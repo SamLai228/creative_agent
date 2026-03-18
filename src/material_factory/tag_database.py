@@ -50,9 +50,15 @@ class TagDatabase:
         return True
     
     def get_tags(self, file_path: str) -> Optional[Dict]:
-        """取得指定素材的標籤"""
+        """取得指定素材的標籤。先按 key 查，找不到再按 file_path 值查（支援 nobg 路徑查詢）"""
         data = self._load_data()
-        return data.get(file_path)
+        if file_path in data:
+            return data[file_path]
+        # fallback：file_path 可能是去背版本路徑，掃描 tags 值來比對
+        for tags in data.values():
+            if tags.get("file_path") == file_path:
+                return tags
+        return None
     
     def get_all_tags(self) -> Dict:
         """取得所有標籤"""
@@ -115,10 +121,7 @@ class TagDatabase:
                     match = False
             
             if match:
-                results.append({
-                    "file_path": file_path,
-                    **tags
-                })
+                results.append({**tags})
         
         return results
     
