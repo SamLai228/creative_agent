@@ -183,6 +183,7 @@ HTML EDM 的生成 pipeline，位於 `src/generator/`。
 - Python 做模板字串替換，版型 100% 保留
 - LLM 同時根據文案內容輸出**人物素材需求**（scenario / mood / style），系統自動從素材庫選出最匹配的去背人物圖片
 - 支援 1 或 2 個人物，根據文案情境決定數量
+- 生成後自動存檔至 `output/edm/`（HTML + PNG）
 
 #### HTML 模板結構（templates/html/edm_base_template.html）
 
@@ -227,6 +228,7 @@ HTML EDM 的生成 pipeline，位於 `src/generator/`。
 | 方法 | 路徑 | 說明 |
 |------|------|------|
 | POST | `/api/generation/generate-html` | 生成完整 HTML EDM（主要端點） |
+| POST | `/api/generation/save-png` | 儲存截圖為 PNG |
 | POST | `/api/generation/generate-copy` | 僅生成文案 JSON |
 | GET | `/api/generation/templates` | 列出所有 HTML template |
 
@@ -236,6 +238,8 @@ HTML EDM 的生成 pipeline，位於 `src/generator/`。
 |------|------|
 | `/assets/{filename}` | 素材圖片（含去背版本） |
 | `/output/{path}` | 生成的 EDM 輸出 |
+
+---
 
 ---
 
@@ -313,10 +317,10 @@ creative_agent/
 │   │   ├── tag_database.py         # 標籤讀寫（JSON）
 │   │   └── factory.py              # 整合入口
 │   └── generator/          # EDM 生成 pipeline
-│       ├── html_generator.py       # HTML EDM 生成（主）
-│       ├── material_selector.py    # 語義搜尋選素材
-│       ├── copywriter.py           # LLM 文案生成
-│       └── template_engine.py      # Template 載入
+│       ├── html_generator.py   # HTML EDM 生成（主）
+│       ├── material_selector.py # 語義搜尋選素材
+│       ├── copywriter.py        # LLM 文案生成
+│       └── template_engine.py   # Template 載入
 ├── frontend/src/
 │   ├── components/
 │   │   ├── EDMGenerator/   # EDM 生成介面
@@ -324,10 +328,7 @@ creative_agent/
 │   │   └── MaterialList/   # 素材列表
 │   └── services/api.js     # 所有 API 呼叫
 ├── templates/
-│   ├── html/               # HTML EDM 模板
-│   ├── images/             # 圖片 template（備用）
-│   ├── references/         # 完稿 EDM 參考圖
-│   └── configs/            # Region 配置 JSON（備用）
+│   └── html/               # HTML EDM 模板
 ├── assets/                 # 素材圖片（含 _nobg.png 去背版本）
 ├── output/                 # 生成的 EDM 輸出
 ├── data/material_tags.json # 標籤資料庫
