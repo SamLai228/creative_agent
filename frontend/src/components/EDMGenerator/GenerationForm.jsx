@@ -76,12 +76,25 @@ function GenerationForm({ onComplete }) {
           <div className="form-row">
             <div className="form-group">
               <label>目標受眾</label>
-              <input
-                type="text"
+              <select
                 value={formValues.target_audience}
                 onChange={updateField('target_audience')}
-                placeholder="例：25-35 歲女性"
-              />
+              >
+                <option value="">請選擇目標受眾</option>
+                <option value="0–18 歲">0–18 歲</option>
+                <option value="18–24 歲">18–24 歲</option>
+                <option value="25–34 歲 ｜ 單身">25–34 歲 ｜ 單身</option>
+                <option value="25–34 歲 ｜ 已婚未育">25–34 歲 ｜ 已婚未育</option>
+                <option value="25–34 歲 ｜ 有子女（幼齡）">25–34 歲 ｜ 有子女（幼齡）</option>
+                <option value="35–45 歲 ｜ 單身">35–45 歲 ｜ 單身</option>
+                <option value="35–45 歲 ｜ 已婚未育">35–45 歲 ｜ 已婚未育</option>
+                <option value="35–45 歲 ｜ 有子女（未成年）">35–45 歲 ｜ 有子女（未成年）</option>
+                <option value="45–64 歲 ｜ 單身">45–64 歲 ｜ 單身</option>
+                <option value="45–64 歲 ｜ 已婚未育">45–64 歲 ｜ 已婚未育</option>
+                <option value="45–64 歲 ｜ 有子女（未成年）">45–64 歲 ｜ 有子女（未成年）</option>
+                <option value="45–64 歲 ｜ 有子女（已成年）">45–64 歲 ｜ 有子女（已成年）</option>
+                <option value="65 歲以上">65 歲以上</option>
+              </select>
             </div>
             <div className="form-group">
               <label>文案風格</label>
